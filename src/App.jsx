@@ -23,10 +23,16 @@ function useCart(){ return useContext(CartContext); }
 
 function CartProvider({children}){
   const [cart, setCart] = useState(() => {
-    try{ const raw = localStorage.getItem(storageKey('cart')); return raw? JSON.parse(raw): []; }catch(e){ return []; }
+    try{ 
+      const raw = localStorage.getItem(storageKey('cart')); 
+      return raw? JSON.parse(raw): []; 
+    }catch(e){ return []; }
   });
 
-  useEffect(()=>{ localStorage.setItem(storageKey('cart'), JSON.stringify(cart)); }, [cart]);
+  useEffect(()=>{ 
+    localStorage.setItem(storageKey('cart'), 
+    JSON.stringify(cart)); 
+  }, [cart]);
 
   const add = (product, qty=1, meta=null) => {
     setCart(prev => {
@@ -273,10 +279,16 @@ function AddToCartBtn({product}){
 function ProductDetail(){
   const { id } = useParams();
   const { products } = useProductsHook();
-  const product = products.find(p=>p.id===id);
   const { add } = useCart();
   const [customText, setCustomText] = useState('');
   const [previewFile, setPreviewFile] = useState(null);
+  
+  const product = products.find(p=>p.id===id);
+
+  // useEffect(() => {
+  //   console.log('[ProductDetail] route id:', id);
+  //   console.log('[ProductDetail] product found:', product);
+  // }, [id, product]);
 
   if(!product) return <div className="p-6">Product not found</div>;
 
@@ -288,26 +300,111 @@ function ProductDetail(){
     reader.readAsDataURL(f);
   }
 
+  const imgSrc = previewFile
+    ? previewFile
+    : product.img?.startsWith('http')
+    ? product.img
+    : product.img?.startsWith('/')
+    ? product.img
+    : `/${product.img}`;
+
   return (
-    <main className="max-w-4xl mx-auto px-4 mt-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="h-80 bg-gray-100 flex items-center justify-center">{previewFile ? <img src={product.img} alt="preview" className="aspect-square w-full rounded-lg bg-gray-200 object-cover group-hover:opacity-75 xl:aspect-7/8"/> : product.img}</div>
-        <div>
-          <h2 className="text-2xl font-semibold">{product.title}</h2>
-          <p className="mt-2 text-gray-700">${product.price.toFixed(2)}</p>
-          <div className="mt-4">
-            <label className="block text-sm">Upload artwork (optional)</label>
-            <input type="file" accept="image/*" onChange={handleUpload} className="mt-2" />
-            <label className="block text-sm mt-3">Custom text for mockup</label>
-            <input value={customText} onChange={e=>setCustomText(e.target.value)} placeholder="e.g. brand name" className="mt-2 border rounded px-2 py-1 w-full" />
-          </div>
-          <div className="mt-4 space-x-2">
-            <button onClick={()=> add(product,1, {customText, previewFile})} className="px-4 py-2 bg-black text-white rounded">Add to cart</button>
-            <Link to="/checkout" className="px-4 py-2 border rounded">Buy now</Link>
-          </div>
+    // <main className="max-w-4xl mx-auto px-4 mt-8">
+    //   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    //     <div className="h-80 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
+    //       {imgSrc ? <img src={imgSrc} alt="preview" className="max-h-80 object-contain"/> : product.title}
+    //     </div>
+    //     {/* <div className="h-80 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
+    //       {imgSrc ? (
+    //         <img
+    //           src={imgSrc}
+    //           alt={product.title}
+    //           className="max-h-72 object-contain"
+    //           onError={(e) => {
+    //             e.currentTarget.onerror = null;
+    //             e.currentTarget.src =
+    //               'https://via.placeholder.com/400x300?text=No+Image';
+    //           }}
+    //         />
+    //       ) : (
+    //         <div className="text-gray-500">No image available</div>
+    //       )}
+    //     </div> */}
+    //     <div>
+    //       <h2 className="text-2xl font-semibold">{product.title}</h2>
+    //       <p className="mt-2 text-gray-700">${product.price.toFixed(2)}</p>
+    //       <div className="mt-4">
+    //         <label className="block text-sm">Upload artwork (optional)</label>
+    //         <input type="file" accept="image/*" onChange={handleUpload} className="mt-2" />
+    //         <label className="block text-sm mt-3">Custom text for mockup</label>
+    //         <input value={customText} onChange={e=>setCustomText(e.target.value)} placeholder="e.g. brand name" className="mt-2 border rounded px-2 py-1 w-full" />
+    //       </div>
+    //       <div className="mt-4 space-x-2">
+    //         <button onClick={()=> add(product,1, {customText, previewFile})} className="px-4 py-2 bg-black text-white rounded">Add to cart</button>
+    //         <Link to="/checkout" className="px-4 py-2 border rounded">Buy now</Link>
+    //       </div>
+    //     </div>
+    //   </div>
+    // </main>
+    <motion.main 
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+  className="max-w-5xl mx-auto px-4 mt-12 text-gray-200"
+>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 bg-gray-900 p-8 rounded-2xl shadow-lg border border-pink-500/30">
+    <motion.div
+      whileHover={{ scale: 1.03 }}
+      className="flex justify-center items-center bg-gradient-to-br from-gray-800 to-gray-950 rounded-xl overflow-hidden"
+    >
+      <img src={imgSrc} alt={product.title} className="max-h-96 rounded-lg object-contain"/>
+    </motion.div>
+
+    <div>
+      <h2 className="text-3xl font-extrabold text-pink-400">{product.title}</h2>
+      <p className="mt-3 text-yellow-400 text-xl font-semibold">${product.price.toFixed(2)}</p>
+
+      <div className="mt-6 space-y-4">
+        <motion.div whileHover={{ scale: 1.02 }}>
+          <label className="text-sm font-semibold text-gray-300">Upload Artwork</label>
+          <input 
+            type="file"
+            accept="image/*"
+            onChange={handleUpload}
+            className="mt-2 w-full bg-gray-800 text-gray-200 border border-gray-600 rounded p-2"
+          />
+        </motion.div>
+
+        <motion.div whileHover={{ scale: 1.02 }}>
+          <label className="text-sm font-semibold text-gray-300">Custom Text</label>
+          <input 
+            value={customText}
+            onChange={(e)=>setCustomText(e.target.value)}
+            placeholder="e.g. brand name"
+            className="mt-2 w-full bg-gray-800 text-gray-200 border border-gray-600 rounded p-2"
+          />
+        </motion.div>
+
+        <div className="flex gap-3 mt-6">
+          <motion.button 
+            whileTap={{ scale: 0.95 }}
+            onClick={()=> add(product, 1, { customText, previewFile })}
+            className="px-5 py-2 bg-gradient-to-r from-pink-600 to-yellow-400 text-white font-semibold rounded-lg shadow-md hover:shadow-pink-500/30"
+          >
+            Add to Cart
+          </motion.button>
+          <Link 
+            to="/checkout"
+            className="px-5 py-2 border border-pink-400 text-pink-300 rounded-lg hover:bg-pink-500 hover:text-white transition"
+          >
+            Buy Now
+          </Link>
         </div>
       </div>
-    </main>
+    </div>
+  </div>
+</motion.main>
+
   );
 }
 
@@ -316,34 +413,76 @@ function CartPage(){
   const nav = useNavigate();
 
   return (
-    <main className="max-w-4xl mx-auto px-4 mt-8">
-      <h2 className="text-2xl font-semibold">Your Cart</h2>
-      {!cart.length && <div className="mt-6 text-gray-600">Cart empty. <Link to="/shop" className="underline">Shop now</Link></div>}
-      <div className="mt-4 space-y-4">
-        {cart.map(item=> (
-          <div key={item.id+JSON.stringify(item.meta)} className="p-4 border rounded flex justify-between items-center">
-            <div>
-              <div className="font-semibold">{item.title}</div>
-              {item.meta?.customText && <div className="text-sm text-gray-600">Custom: {item.meta.customText}</div>}
-            </div>
-            <div className="flex items-center gap-3">
-              <input type="number" min={1} value={item.qty} onChange={(e)=> updateQty(item.id, Number(e.target.value))} className="w-16 border rounded px-2 py-1" />
-              <div>${(item.price*item.qty).toFixed(2)}</div>
-              <button onClick={()=> remove(item.id)} className="px-3 py-1 border rounded">Remove</button>
-            </div>
-          </div>
-        ))}
-      </div>
-      {cart.length>0 && (
-        <div className="mt-6 flex justify-between items-center">
-          <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
+    // <main className="max-w-4xl mx-auto px-4 mt-8">
+    //   <h2 className="text-2xl font-semibold">Your Cart</h2>
+    //   {!cart.length && <div className="mt-6 text-gray-600">Cart empty. <Link to="/shop" className="underline">Shop now</Link></div>}
+    //   <div className="mt-4 space-y-4">
+    //     {cart.map(item=> (
+    //       <div key={item.id+JSON.stringify(item.meta)} className="p-4 border rounded flex justify-between items-center">
+    //         <div>
+    //           <div className="font-semibold">{item.title}</div>
+    //           {item.meta?.customText && <div className="text-sm text-gray-600">Custom: {item.meta.customText}</div>}
+    //         </div>
+    //         <div className="flex items-center gap-3">
+    //           <input type="number" min={1} value={item.qty} onChange={(e)=> updateQty(item.id, Number(e.target.value))} className="w-16 border rounded px-2 py-1" />
+    //           <div>${(item.price*item.qty).toFixed(2)}</div>
+    //           <button onClick={()=> remove(item.id)} className="px-3 py-1 border rounded">Remove</button>
+    //         </div>
+    //       </div>
+    //     ))}
+    //   </div>
+    //   {cart.length>0 && (
+    //     <div className="mt-6 flex justify-between items-center">
+    //       <div className="text-lg font-semibold">Total: ${total.toFixed(2)}</div>
+    //       <div>
+    //         <button onClick={()=> nav('/checkout')} className="px-4 py-2 bg-black text-white rounded">Checkout</button>
+    //         <button onClick={clear} className="ml-2 px-4 py-2 border rounded">Clear</button>
+    //       </div>
+    //     </div>
+    //   )}
+    // </main>
+    <motion.main 
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  className="max-w-5xl mx-auto px-4 mt-12 text-gray-200"
+>
+  <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-yellow-400 bg-clip-text text-transparent">
+    Your Cart
+  </h2>
+
+  {cart.length === 0 ? (
+    <p className="mt-6 text-gray-400">Your cart is empty. <Link to="/shop" className="underline text-pink-400">Shop now</Link></p>
+  ) : (
+    <motion.div layout className="mt-6 space-y-4">
+      {cart.map(item => (
+        <motion.div 
+          key={item.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-5 bg-gray-900 border border-pink-500/30 rounded-xl shadow-lg flex justify-between items-center hover:shadow-pink-500/20 transition"
+        >
           <div>
-            <button onClick={()=> nav('/checkout')} className="px-4 py-2 bg-black text-white rounded">Checkout</button>
-            <button onClick={clear} className="ml-2 px-4 py-2 border rounded">Clear</button>
+            <h3 className="font-semibold text-pink-400">{item.title}</h3>
+            {item.meta?.customText && <p className="text-sm text-gray-400">Custom: {item.meta.customText}</p>}
           </div>
+          <div className="flex items-center gap-3">
+            <input type="number" min={1} value={item.qty} onChange={(e)=>updateQty(item.id, +e.target.value)} className="w-16 bg-gray-800 text-center border border-gray-600 rounded" />
+            <div className="text-yellow-400 font-semibold">${(item.price * item.qty).toFixed(2)}</div>
+            <button onClick={()=>remove(item.id)} className="text-sm px-3 py-1 border border-pink-400 text-pink-400 rounded-lg hover:bg-pink-600 hover:text-white transition">Remove</button>
+          </div>
+        </motion.div>
+      ))}
+      <div className="flex justify-between items-center mt-6">
+        <div className="text-lg font-bold text-yellow-400">Total: ${total.toFixed(2)}</div>
+        <div className="space-x-3">
+          <button onClick={()=>nav('/checkout')} className="px-5 py-2 bg-gradient-to-r from-pink-600 to-yellow-400 text-white rounded-lg font-semibold">Checkout</button>
+          <button onClick={clear} className="px-5 py-2 border border-gray-600 rounded-lg text-gray-300 hover:border-pink-500 transition">Clear</button>
         </div>
-      )}
-    </main>
+      </div>
+    </motion.div>
+  )}
+</motion.main>
+
   );
 }
 
@@ -365,66 +504,134 @@ function Checkout(){
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 mt-8">
-      <h2 className="text-2xl font-semibold">Checkout</h2>
-      {!cart.length && <div className="mt-6">Your cart is empty — <Link to="/shop" className="underline">shop</Link></div>}
-      {cart.length>0 && (
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block">Full name</label>
-            <input value={name} onChange={e=>setName(e.target.value)} className="w-full border rounded px-2 py-1" />
-            <label className="block mt-3">Email</label>
-            <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full border rounded px-2 py-1" />
-            <label className="block mt-3">Shipping address</label>
-            <textarea value={address} onChange={e=>setAddress(e.target.value)} className="w-full border rounded px-2 py-1" />
-            <button onClick={placeOrder} className="mt-4 px-4 py-2 bg-black text-white rounded">Place order (${total.toFixed(2)})</button>
-            {message && <div className="mt-3 text-green-600">{message}</div>}
-          </div>
-          <div>
-            <h4 className="font-semibold">Order summary</h4>
-            <ul className="mt-3 space-y-2">
-              {cart.map(i=> <li key={i.id+JSON.stringify(i.meta)} className="flex justify-between"><span>{i.title} x{i.qty}</span><span>${(i.price*i.qty).toFixed(2)}</span></li>)}
-            </ul>
-            <div className="mt-4 font-semibold">Total: ${total.toFixed(2)}</div>
-          </div>
+    // <main className="max-w-4xl mx-auto px-4 mt-8">
+    //   <h2 className="text-2xl font-semibold">Checkout</h2>
+    //   {!cart.length && <div className="mt-6">Your cart is empty — <Link to="/shop" className="underline">shop</Link></div>}
+    //   {cart.length>0 && (
+    //     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+    //       <div>
+    //         <label className="block">Full name</label>
+    //         <input value={name} onChange={e=>setName(e.target.value)} className="w-full border rounded px-2 py-1" />
+    //         <label className="block mt-3">Email</label>
+    //         <input value={email} onChange={e=>setEmail(e.target.value)} className="w-full border rounded px-2 py-1" />
+    //         <label className="block mt-3">Shipping address</label>
+    //         <textarea value={address} onChange={e=>setAddress(e.target.value)} className="w-full border rounded px-2 py-1" />
+    //         <button onClick={placeOrder} className="mt-4 px-4 py-2 bg-black text-white rounded">Place order (${total.toFixed(2)})</button>
+    //         {message && <div className="mt-3 text-green-600">{message}</div>}
+    //       </div>
+    //       <div>
+    //         <h4 className="font-semibold">Order summary</h4>
+    //         <ul className="mt-3 space-y-2">
+    //           {cart.map(i=> <li key={i.id+JSON.stringify(i.meta)} className="flex justify-between"><span>{i.title} x{i.qty}</span><span>${(i.price*i.qty).toFixed(2)}</span></li>)}
+    //         </ul>
+    //         <div className="mt-4 font-semibold">Total: ${total.toFixed(2)}</div>
+    //       </div>
+    //     </div>
+    //   )}
+    // </main>
+    <motion.main 
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+  className="max-w-4xl mx-auto px-4 mt-12 text-gray-200"
+>
+  <h2 className="text-3xl font-extrabold text-pink-400">Checkout</h2>
+  <div className="mt-8 grid md:grid-cols-2 gap-6">
+    <div className="bg-gray-900 p-6 rounded-xl border border-pink-500/30 shadow-lg">
+      <label className="block mt-2">Full name</label>
+      <input className="w-full bg-gray-800 p-2 rounded border border-gray-600 focus:border-pink-400 outline-none transition" value={name} onChange={e=>setName(e.target.value)} />
+
+      <label className="block mt-3">Email</label>
+      <input className="w-full bg-gray-800 p-2 rounded border border-gray-600 focus:border-pink-400 outline-none" value={email} onChange={e=>setEmail(e.target.value)} />
+
+      <label className="block mt-3">Address</label>
+      <textarea className="w-full bg-gray-800 p-2 rounded border border-gray-600 focus:border-pink-400 outline-none" value={address} onChange={e=>setAddress(e.target.value)} />
+
+      <motion.button 
+        whileTap={{ scale: 0.95 }}
+        onClick={placeOrder}
+        className="mt-5 px-5 py-2 bg-gradient-to-r from-pink-600 to-yellow-400 rounded-lg text-white font-semibold"
+      >
+        Place Order (${total.toFixed(2)})
+      </motion.button>
+      {message && <p className="mt-3 text-green-500">{message}</p>}
+    </div>
+
+    <div className="bg-gray-900 p-6 rounded-xl border border-pink-500/30 shadow-lg">
+      <h3 className="font-semibold text-yellow-400">Order Summary</h3>
+      {cart.map(i=>(
+        <div key={i.id} className="flex justify-between text-sm mt-2">
+          <span>{i.title} x{i.qty}</span>
+          <span>${(i.price*i.qty).toFixed(2)}</span>
         </div>
-      )}
-    </main>
+      ))}
+      <div className="mt-4 font-bold text-yellow-400">Total: ${total.toFixed(2)}</div>
+    </div>
+  </div>
+</motion.main>
+
   );
 }
 
 function Services(){
   return (
-    <main className="max-w-6xl mx-auto px-4 mt-8">
-      <h2 className="text-2xl font-semibold">Design Services</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <div className="p-4 border rounded">
-          <h4 className="font-semibold">Logo Design</h4>
-          <p className="text-sm text-gray-600 mt-2">Brand marks, logotypes, and brand guidelines. Revisions included.</p>
-        </div>
-        <div className="p-4 border rounded">
-          <h4 className="font-semibold">Printing & Layout</h4>
-          <p className="text-sm text-gray-600 mt-2">Flyers, business cards, banners, and print setup for any press.</p>
-        </div>
-        <div className="p-4 border rounded">
-          <h4 className="font-semibold">Mockups & Product Shots</h4>
-          <p className="text-sm text-gray-600 mt-2">Realistic mockups for cups, caps, bottles, and more.</p>
-        </div>
-      </div>
-    </main>
+    // <main className="max-w-6xl mx-auto px-4 mt-8">
+    //   <h2 className="text-2xl font-semibold">Design Services</h2>
+    //   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+    //     <div className="p-4 border rounded">
+    //       <h4 className="font-semibold">Logo Design</h4>
+    //       <p className="text-sm text-gray-600 mt-2">Brand marks, logotypes, and brand guidelines. Revisions included.</p>
+    //     </div>
+    //     <div className="p-4 border rounded">
+    //       <h4 className="font-semibold">Printing & Layout</h4>
+    //       <p className="text-sm text-gray-600 mt-2">Flyers, business cards, banners, and print setup for any press.</p>
+    //     </div>
+    //     <div className="p-4 border rounded">
+    //       <h4 className="font-semibold">Mockups & Product Shots</h4>
+    //       <p className="text-sm text-gray-600 mt-2">Realistic mockups for cups, caps, bottles, and more.</p>
+    //     </div>
+    //   </div>
+    // </main>
+    <motion.main initial={{opacity:0}} animate={{opacity:1}} className="max-w-6xl mx-auto px-4 mt-12 text-gray-200">
+  <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-pink-500 to-yellow-400 bg-clip-text text-transparent mb-8">Design Services</h2>
+  <div className="grid md:grid-cols-3 gap-6">
+    {[
+      {title:'Logo Design',desc:'Brand marks, logotypes, and brand guidelines.'},
+      {title:'Printing & Layout',desc:'Flyers, business cards, and banners.'},
+      {title:'Mockups & Product Shots',desc:'Realistic visuals for your products.'},
+    ].map((s,i)=>(
+      <motion.div key={i} whileHover={{scale:1.05}} className="p-6 bg-gray-900 rounded-xl border border-pink-500/40 shadow-lg hover:shadow-pink-500/30 transition">
+        <h4 className="text-xl font-semibold text-pink-400">{s.title}</h4>
+        <p className="mt-2 text-sm text-gray-400">{s.desc}</p>
+      </motion.div>
+    ))}
+  </div>
+</motion.main>
+
   );
 }
 
 function Portfolio(){
   return (
-    <main className="max-w-6xl mx-auto px-4 mt-8">
-      <h2 className="text-2xl font-semibold">Portfolio</h2>
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="h-40 bg-gray-100 rounded flex items-center justify-center">Logo pack</div>
-        <div className="h-40 bg-gray-100 rounded flex items-center justify-center">Mug mockup</div>
-        <div className="h-40 bg-gray-100 rounded flex items-center justify-center">Cap mockup</div>
-      </div>
-    </main>
+    // <main className="max-w-6xl mx-auto px-4 mt-8">
+    //   <h2 className="text-2xl font-semibold">Portfolio</h2>
+    //   <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    //     <div className="h-40 bg-gray-100 rounded flex items-center justify-center">Logo pack</div>
+    //     <div className="h-40 bg-gray-100 rounded flex items-center justify-center">Mug mockup</div>
+    //     <div className="h-40 bg-gray-100 rounded flex items-center justify-center">Cap mockup</div>
+    //   </div>
+    // </main>
+    <motion.main initial={{opacity:0}} animate={{opacity:1}} className="max-w-6xl mx-auto px-4 mt-12 text-gray-200">
+  <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-pink-500 to-yellow-400 bg-clip-text text-transparent mb-8">Portfolio</h2>
+  <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+    {['Logo pack','Mug mockup','Cap mockup','Flyer design','Brand guide','Packaging'].map((item,i)=>(
+      <motion.div key={i} whileHover={{scale:1.05}} className="h-48 bg-gray-900 flex justify-center items-center rounded-xl border border-pink-500/30 shadow hover:shadow-pink-500/20 transition">
+        <p className="text-gray-300 font-semibold">{item}</p>
+      </motion.div>
+    ))}
+  </div>
+</motion.main>
+
   );
 }
 
@@ -443,31 +650,64 @@ function Admin(){
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 mt-8">
-      <h2 className="text-2xl font-semibold">Admin</h2>
-      <div className="mt-4 p-4 border rounded grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block">Title</label>
-          <input value={title} onChange={e=>setTitle(e.target.value)} className="w-full border rounded px-2 py-1" />
-          <label className="block mt-2">Price</label>
-          <input value={price} onChange={e=>setPrice(e.target.value)} className="w-full border rounded px-2 py-1" />
-          <label className="block mt-2">Category</label>
-          <select value={category} onChange={e=>setCategory(e.target.value)} className="w-full border rounded px-2 py-1">
-            <option value="mugs">Mugs</option>
-            <option value="caps">Caps</option>
-            <option value="keyholders">Key Holders</option>
-            <option value="printing">Printing</option>
-          </select>
-          <button onClick={create} className="mt-4 px-4 py-2 bg-black text-white rounded">Create Product</button>
-        </div>
-        <div>
-          <h4 className="font-semibold">Existing products</h4>
-          <ul className="mt-2 space-y-2 text-sm text-gray-700">
-            {products.map(p=> <li key={p.id} className="border p-2 rounded">{p.title} — ${p.price}</li>)}
-          </ul>
-        </div>
-      </div>
-    </main>
+    // <main className="max-w-4xl mx-auto px-4 mt-8">
+    //   <h2 className="text-2xl font-semibold">Admin</h2>
+    //   <div className="mt-4 p-4 border rounded grid grid-cols-1 md:grid-cols-2 gap-4">
+    //     <div>
+    //       <label className="block">Title</label>
+    //       <input value={title} onChange={e=>setTitle(e.target.value)} className="w-full border rounded px-2 py-1" />
+    //       <label className="block mt-2">Price</label>
+    //       <input value={price} onChange={e=>setPrice(e.target.value)} className="w-full border rounded px-2 py-1" />
+    //       <label className="block mt-2">Category</label>
+    //       <select value={category} onChange={e=>setCategory(e.target.value)} className="w-full border rounded px-2 py-1">
+    //         <option value="mugs">Mugs</option>
+    //         <option value="caps">Caps</option>
+    //         <option value="keyholders">Key Holders</option>
+    //         <option value="printing">Printing</option>
+    //       </select>
+    //       <button onClick={create} className="mt-4 px-4 py-2 bg-black text-white rounded">Create Product</button>
+    //     </div>
+    //     <div>
+    //       <h4 className="font-semibold">Existing products</h4>
+    //       <ul className="mt-2 space-y-2 text-sm text-gray-700">
+    //         {products.map(p=> <li key={p.id} className="border p-2 rounded">{p.title} — ${p.price}</li>)}
+    //       </ul>
+    //     </div>
+    //   </div>
+    // </main>
+    <motion.main initial={{opacity:0}} animate={{opacity:1}} className="max-w-5xl mx-auto px-4 mt-12 text-gray-200">
+  <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-yellow-400 bg-clip-text text-transparent">Admin Dashboard</h2>
+  <div className="mt-6 grid md:grid-cols-2 gap-6">
+    <div className="p-6 bg-gray-900 border border-pink-500/30 rounded-xl">
+      <h4 className="font-semibold text-yellow-400 mb-3">Add Product</h4>
+      <label className="block mt-2">Title</label>
+      <input className="w-full bg-gray-800 p-2 rounded border border-gray-600 focus:border-pink-400" value={title} onChange={e=>setTitle(e.target.value)} />
+      <label className="block mt-3">Price</label>
+      <input className="w-full bg-gray-800 p-2 rounded border border-gray-600 focus:border-pink-400" value={price} onChange={e=>setPrice(e.target.value)} />
+      <label className="block mt-3">Category</label>
+      <select className="w-full bg-gray-800 p-2 rounded border border-gray-600 focus:border-pink-400" value={category} onChange={e=>setCategory(e.target.value)}>
+        <option value="mugs">Mugs</option>
+        <option value="caps">Caps</option>
+        <option value="keyholders">Key Holders</option>
+        <option value="printing">Printing</option>
+      </select>
+      <motion.button whileTap={{scale:0.95}} onClick={create} className="mt-4 w-full px-4 py-2 bg-gradient-to-r from-pink-600 to-yellow-400 text-white font-semibold rounded-lg">Add Product</motion.button>
+    </div>
+
+    <div className="p-6 bg-gray-900 border border-pink-500/30 rounded-xl">
+      <h4 className="font-semibold text-yellow-400">Product List</h4>
+      <ul className="mt-3 space-y-2 max-h-64 overflow-auto">
+        {products.map(p=>(
+          <li key={p.id} className="border border-gray-700 p-2 rounded-lg text-sm flex justify-between">
+            <span>{p.title}</span>
+            <span className="text-pink-400">${p.price}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</motion.main>
+
   );
 }
 
